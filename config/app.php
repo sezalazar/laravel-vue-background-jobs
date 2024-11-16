@@ -123,4 +123,8 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+
+    'support_email' => 'support@mail.com',
+    'company_name' => env('APP_COMPANY_NAME', 'Company Name'),
+
 ];
