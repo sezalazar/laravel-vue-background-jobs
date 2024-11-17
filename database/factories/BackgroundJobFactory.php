@@ -17,11 +17,13 @@ class BackgroundJobFactory extends Factory
             'method' => 'exampleMethod',
             'params' => json_encode(['param1' => $this->faker->word]),
             'status' => 'pending',
-            'priority' => $this->faker->numberBetween(0, 10),
+            'priority' => $this->faker->numberBetween(1, 5),
             'retry_count' => 0,
-            'max_retries' => 3,
+            'max_retries' => $this->faker->numberBetween(1, 5),
+            'last_attempted_at' => $this->faker->dateTime(),
             'error_message' => null,
-            'scheduled_at' => now()->addMinutes($this->faker->numberBetween(5, 60)),
+            'scheduled_at' => now()->addMinutes($this->faker->numberBetween(10, 60)),
+            'user_id' => User::factory(),
         ];
     }
 
