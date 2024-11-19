@@ -13,10 +13,11 @@ class BackgroundJobFactory extends Factory
     public function definition(): array
     {
         return [
+            //TODO: check if '\App\Services\ExampleService::class' is OK.
             'class' => \App\Services\ExampleService::class,
             'method' => 'exampleMethod',
             'params' => json_encode(['param1' => $this->faker->word]),
-            'status' => 'pending',
+            'status' => $this->faker->randomElement(['pending', 'running', 'completed', 'failed', 'cancelled']),
             'priority' => $this->faker->numberBetween(1, 5),
             'retry_count' => 0,
             'max_retries' => $this->faker->numberBetween(1, 5),

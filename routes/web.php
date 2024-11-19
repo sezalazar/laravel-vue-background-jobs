@@ -27,4 +27,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// TODO: Add security to routes
+Route::get('/background-jobs', [BackgroundJobController::class, 'index']);
+Route::post('/background-jobs/{background_job}/cancelBackgroundJob', [BackgroundJobController::class, 'cancelBackgroundJob']);
+Route::get('/background-jobs/{job}/logs', [BackgroundJobController::class, 'getLogs']);
+Route::post('/background-jobs/runBackgroundJob', [BackgroundJobController::class, 'runBackgroundJob']);
+Route::get('/background-jobs/allowed-classes', [BackgroundJobController::class, 'allowedClasses']);
+Route::post('/background-jobs/class-methods', [BackgroundJobController::class, 'getClassMethods']);
+
+
+
 require __DIR__.'/auth.php';
