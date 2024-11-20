@@ -126,7 +126,17 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
-
+        'background_jobs' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/background_jobs.log'),
+            'level' => 'info',
+        ],
+        'background_jobs_errors' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/background_jobs_errors.log'),
+            'level' => 'error',
+            'days' => config('background_jobs.log_retention_days'),
+        ],
     ],
 
 ];
