@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+// TODO: Change company loco in this component:
+// import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
@@ -22,9 +23,11 @@ const showingNavigationDropdown = ref(false);
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
+                                <!-- TODO: Use alt value from .env -->
                                 <img
-                                        src="/images/easypeasy_logo.jpeg"
-                                        alt="Easypeasy Logo"
+                                        src="/images/company_logo.jpeg"
+                                        
+                                        alt="Company Logo"
                                         class="block h-9 w-auto"
                                     />
                             </div>

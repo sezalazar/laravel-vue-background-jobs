@@ -17,8 +17,19 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
+        return Inertia::render('Dashboard', [
+            'companyName' => config('app.company_name'),
+        ]);
     })->name('dashboard');
+
+    Route::get('/background-jobs', [BackgroundJobController::class, 'index']);
+    Route::post('/background-jobs/{background_job}/cancelBackgroundJob', [BackgroundJobController::class, 'cancelBackgroundJob']);
+    Route::get('/background-jobs/{job}/logs', [BackgroundJobController::class, 'getLogs']);
+    Route::post('/background-jobs/runBackgroundJob', [BackgroundJobController::class, 'runBackgroundJob']);
+    Route::get('/background-jobs/allowed-classes', [BackgroundJobController::class, 'getAllowedClasses']);
+    Route::post('/background-jobs/class-methods', [BackgroundJobController::class, 'getClassMethods']);
+    Route::post('/background-jobs/method-parameters', [BackgroundJobController::class, 'getMethodParameters']);
+    Route::post('/background-jobs/{job}/retry', [BackgroundJobController::class, 'retryJob']);
 });
 
 Route::middleware('auth')->group(function () {
@@ -26,15 +37,5 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
-// TODO: Add security to routes
-Route::get('/background-jobs', [BackgroundJobController::class, 'index']);
-Route::post('/background-jobs/{background_job}/cancelBackgroundJob', [BackgroundJobController::class, 'cancelBackgroundJob']);
-Route::get('/background-jobs/{job}/logs', [BackgroundJobController::class, 'getLogs']);
-Route::post('/background-jobs/runBackgroundJob', [BackgroundJobController::class, 'runBackgroundJob']);
-Route::get('/background-jobs/allowed-classes', [BackgroundJobController::class, 'allowedClasses']);
-Route::post('/background-jobs/class-methods', [BackgroundJobController::class, 'getClassMethods']);
-
-
 
 require __DIR__.'/auth.php';

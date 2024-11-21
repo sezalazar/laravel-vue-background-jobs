@@ -11,18 +11,23 @@ const showModal = ref(false);
 const jobForm = reactive({
     className: '',
     methodName: '',
-    params: '',
 });
+const methodParamsValues = reactive({});
 const showJobForm = ref(false);
 const allowedClasses = ref([]);
 const classMethods = ref([]);
+const methodParameters = ref([]);
+
+function showCatchError() {
+    alert("Something went wrong. Please try again or contact support.");
+}
 
 async function getBackgroundJobs() {
     try {
         const response = await axios.get('/background-jobs');
         backgroundJobs.value = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     } catch {
-        alert("Couldn't fetch the background jobs. Please try again.");
+        showCatchError();
     }
 }
 
@@ -34,7 +39,7 @@ async function getAllowedClasses() {
             ...response.data[key]
         }));
     } catch {
-        alert("Couldn't fetch the allowed classes. Please try again.");
+        showCatchError();
     }
 }
 
@@ -43,8 +48,23 @@ async function getClassMethods(className) {
         const response = await axios.post('/background-jobs/class-methods', { className });
         classMethods.value = response.data;
     } catch {
-        alert("Couldn't fetch the methods for the selected class. Please try again.");
+        showCatchError();
         classMethods.value = [];
+    }
+}
+
+async function getMethodParameters(className, methodName) {
+    try {
+        const response = await axios.post('/background-jobs/method-parameters', { className, methodName });
+        methodParameters.value = response.data;
+        methodParamsValues.value = {};
+        methodParameters.value.forEach(param => {
+            methodParamsValues[param.name] = param.default || '';
+        });
+    } catch {
+        showCatchError();
+        methodParameters.value = [];
+        methodParamsValues.value = {};
     }
 }
 
@@ -53,6 +73,18 @@ watch(() => jobForm.className, (newClass) => {
         getClassMethods(newClass);
     } else {
         classMethods.value = [];
+    }
+    jobForm.methodName = '';
+    methodParameters.value = [];
+    methodParamsValues.value = {};
+});
+
+watch(() => jobForm.methodName, (newMethod) => {
+    if (newMethod && jobForm.className) {
+        getMethodParameters(jobForm.className, newMethod);
+    } else {
+        methodParameters.value = [];
+        methodParamsValues.value = {};
     }
 });
 
@@ -63,54 +95,52 @@ async function getLogs(jobId) {
         selectedJob.value = backgroundJobs.value.find(job => job.id === jobId);
         showModal.value = true;
     } catch {
-        alert("Couldn't fetch the logs for this job. Please try again.");
+        showCatchError();
     }
 }
 
 async function cancelJob(jobId) {
-    if (confirm('Are you sure you want to cancel this job?')) {
+    if (confirm('Cancel this job?')) {
         try {
             await axios.post(`/background-jobs/${jobId}/cancelBackgroundJob`);
             alert('Job cancelled successfully.');
             getBackgroundJobs();
         } catch {
-            alert("Couldn't cancel the job. Please try again.");
+            showCatchError();
         }
     }
 }
 
 async function retryJob(jobId) {
-    if (confirm('Are you sure you want to retry this job?')) {
+    if (confirm('Retry this job?')) {
         try {
             await axios.post(`/background-jobs/${jobId}/retry`);
-            alert('Job retried successfully.');
+            alert('The job has started processing again.');
             getBackgroundJobs();
         } catch {
-            alert("Couldn't retry the job. Please try again.");
+            showCatchError();
         }
     }
 }
 
 async function createJob() {
     try {
-        const paramsArray = jobForm.params ? jobForm.params.split(',').map(param => param.trim()) : [];
         const response = await axios.post('/background-jobs/runBackgroundJob', {
             className: jobForm.className,
             methodName: jobForm.methodName,
-            params: paramsArray,
+            params: methodParamsValues,
         });
 
         alert('Job created successfully.');
-        
         backgroundJobs.value.unshift(response.data.job);
 
         jobForm.className = '';
         jobForm.methodName = '';
-        jobForm.params = '';
-
+        methodParameters.value = [];
+        methodParamsValues.value = {};
         showJobForm.value = false;
     } catch {
-        alert("Couldn't create the job. Please check the inputs and try again.");
+        showCatchError();
     }
 }
 
@@ -150,11 +180,6 @@ onMounted(() => {
                             {{ classOption.name }}
                         </option>
                     </select>
-                    <p v-if="jobForm.className" class="text-sm text-gray-600 mb-4">
-                        Retries: {{ allowedClasses.find(cls => cls.name === jobForm.className)?.retries || 0 }},
-                        Delay: {{ allowedClasses.find(cls => cls.name === jobForm.className)?.delay || 1 }},
-                        Priority: {{ allowedClasses.find(cls => cls.name === jobForm.className)?.priority || 3 }}
-                    </p>
 
                     <label class="block mb-2 text-sm font-medium text-gray-700">Method Name</label>
                     <select
@@ -168,13 +193,21 @@ onMounted(() => {
                         </option>
                     </select>
 
-                    <label class="block mb-2 text-sm font-medium text-gray-700">Parameters (comma-separated)</label>
-                    <input
-                        v-model="jobForm.params"
-                        type="text"
-                        class="w-full p-2 border border-gray-300 rounded mb-4"
-                        placeholder="Enter parameters"
-                    />
+                    <div v-if="methodParameters.length > 0" class="mt-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Parameters</label>
+                        <div v-for="param in methodParameters" :key="param.name" class="mb-4">
+                            <label :for="param.name" class="block text-sm font-medium text-gray-700">
+                                {{ param.name }} <span v-if="!param.optional" class="text-red-500">*</span>
+                            </label>
+                            <input
+                                :id="param.name"
+                                v-model="methodParamsValues[param.name]"
+                                :placeholder="'Enter ' + param.type"
+                                type="text"
+                                class="w-full p-2 border border-gray-300 rounded"
+                            />
+                        </div>
+                    </div>
 
                     <button
                         @click="createJob"
