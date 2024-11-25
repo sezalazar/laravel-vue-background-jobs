@@ -10,8 +10,8 @@ import { Link } from '@inertiajs/vue3';
         <div>
             <Link href="/">
                 <img
-                                        src="/images/easypeasy_logo.jpeg"
-                                        alt="Easypeasy Logo"
+                                        src="/images/company_logo.jpeg"
+                                        alt="Company Logo"
                                         class="block h-15 w-auto"
                                     />
             </Link>

@@ -4,7 +4,7 @@
 
 @section('mailContent')
 <div style="text-align: center;">
-    <img src="{{ asset('images/easypeasy_logo.jpeg') }}" alt="Logo" style="width: 150px; height: auto;">
+    <img src="{{ asset('images/company_logo.jpeg') }}" alt="Logo" style="width: 150px; height: auto;">
 
     <h1>Background Job Failed</h1>
 

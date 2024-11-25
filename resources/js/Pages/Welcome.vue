@@ -24,7 +24,7 @@ function closeDropdown() {
         <div class="flex items-center justify-between px-6 py-4">
             <!-- Logo -->
             <a href="/">
-                <img src="/images/easypeasy_logo.jpeg" alt="Logo" class="h-12 w-auto" />
+                <img src="/images/company_logo.jpeg" alt="Logo" class="h-12 w-auto" />
             </a>
 
             <!-- Navigation -->
