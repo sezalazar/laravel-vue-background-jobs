@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
 use ReflectionClass;
+use App\DTOs\BackgroundJobDTO;
 
 class BackgroundJobController extends Controller
 {
@@ -63,7 +64,9 @@ class BackgroundJobController extends Controller
                 'user_id' => Auth::id(),
             ]);
 
-            runBackgroundJobHelper($job->class, $job->method, $job->params);
+            $jobDTO = BackgroundJobDTO::fromModel($job);
+
+            runBackgroundJobHelper($jobDTO);
 
 
             DB::commit();

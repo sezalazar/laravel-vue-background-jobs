@@ -15,6 +15,7 @@ class RunBackgroundJobCommand extends Command
     protected $signature = 'background:execute
                             {class : Fully qualified class name}
                             {method : Method to execute}
+                            {jobId : The ID of the background job}
                             {params?* : Parameters for the method}';
 
     protected $description = 'Run background jobs';
@@ -33,21 +34,16 @@ class RunBackgroundJobCommand extends Command
         $className = $this->argument('class');
         $methodName = $this->argument('method');
         $params = $this->argument('params') ?? [];
+        $jobId = $this->argument('jobId');
 
-        $this->logger->log('background_jobs', "Start executing {$className}::{$methodName}");
+        $this->logger->log('background_jobs', "Start executing {$className}::{$methodName} for Job ID {$jobId}");
 
-        $workingJob = BackgroundJob::where('class', $className)
-            ->where('method', $methodName)
-            ->where('status', 'pending')
-            ->lockForUpdate()
-            ->first();
+        $workingJob = BackgroundJob::find($jobId);
 
         if (!$workingJob) {
-            $this->logger->error('background_jobs_errors', "No pending job found for {$className}::{$methodName}");
+            $this->logger->error('background_jobs_errors', "No job found with ID {$jobId}");
             return 1;
         }
-
-        $jobId = $workingJob->id;
 
         try {
             $maxRetries = config("background_jobs.allowed_classes.{$className}.retries", config('background_jobs.default_retries'));
@@ -61,7 +57,7 @@ class RunBackgroundJobCommand extends Command
 
             return 0;
         } catch (Throwable $e) {
-            BackgroundJob::where('id', $jobId)->update([
+            $workingJob->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
             ]);
@@ -81,7 +77,7 @@ class RunBackgroundJobCommand extends Command
         $this->logger->log('background_jobs', "Executing {$className}::{$methodName} for Job ID {$jobId}");
         $this->jobLogService->create($jobId, "Job {$jobId} is running");
 
-        BackgroundJob::where('id', $jobId)->update(['status' => 'running']);
+        $workingJob->update(['status' => 'running']);
 
         if (!$this->validator->validate($className, $methodName)) {
             throw new \InvalidArgumentException("Validations failed for {$className}::{$methodName}");
@@ -90,7 +86,7 @@ class RunBackgroundJobCommand extends Command
         $instance = app()->make($className);
         call_user_func_array([$instance, $methodName], $params);
 
-        BackgroundJob::where('id', $jobId)->update([
+        $workingJob->update([
             'status' => 'completed',
         ]);
 

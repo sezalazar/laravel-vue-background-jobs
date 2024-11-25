@@ -2,24 +2,28 @@
 
 use Illuminate\Support\Facades\Artisan;
 use App\Services\BackgroundJobLogger;
+use App\DTOs\BackgroundJobDTO;
 
 if (!function_exists('runBackgroundJobHelper')) {
-    function runBackgroundJobHelper(string $className, string $methodName, array $params = []): void
+
+    function runBackgroundJobHelper(BackgroundJobDTO $jobDTO): void
     {
         $logger = app(BackgroundJobLogger::class);
-        $logger->log('background_jobs', "Start executing {$className}::{$methodName}");
+        $logger->log('background_jobs', "Start executing {$jobDTO->class}::{$jobDTO->method} for Job ID {$jobDTO->id}");
 
         try {
             Artisan::call('background:execute', [
-                'class' => $className,
-                'method' => $methodName,
-                'params' => $params,
+                'class' => $jobDTO->class,
+                'method' => $jobDTO->method,
+                'jobId' => $jobDTO->id,
+                'params' => $jobDTO->params,
             ]);
+                      
 
             $output = Artisan::output();
             $logger->log('background_jobs', "Command executed successfully. Output: {$output}");
         } catch (\Exception $e) {
-            $logger->error('background_jobs_errors', "Failed to execute command for {$className}::{$methodName}", [
+            $logger->error('background_jobs_errors', "Failed to execute command for {$jobDTO->class}::{$jobDTO->method}", [
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
